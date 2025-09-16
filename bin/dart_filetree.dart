@@ -1,3 +1,5 @@
+import 'dart:isolate';
+
 import 'package:dart_filetree/file_node.dart';
 import 'package:dart_filetree/file_service.dart';
 import 'package:nocterm/nocterm.dart';
@@ -350,32 +352,26 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
   Component _buildPreview() {
     final nodes = getCurrFiles();
     if (pointerIndex >= nodes.length) return Text('');
-
     final node = nodes[pointerIndex];
     if (node.isDirectory) return Text('');
-
     final content = fileService.readFileContent(node.entity.path);
     final lines = content.split('\n');
-
     return Container(
       width: getMaxWidth() - _previewMargin.toDouble(),
       decoration: BoxDecoration(border: BoxBorder.all(color: Colors.white)),
       margin: EdgeInsets.symmetric(horizontal: 2),
-      child: SingleChildScrollView(
+      child: ListView.builder(
         controller: previewScrollController,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (int i = 0; i < lines.length; i++)
-              Row(
-                children: [
-                  Text('${(i + 1).toString().padLeft(4)}: ',
-                      style: TextStyle(color: Colors.gray)),
-                  Expanded(child: Text(lines[i])),
-                ],
-              ),
-          ],
-        ),
+        itemCount: lines.length,
+        itemBuilder: (context, index) {
+          return Row(
+            children: [
+              Text('${(index + 1).toString().padLeft(4)}: ',
+                  style: TextStyle(color: Colors.gray)),
+              Expanded(child: Text(lines[index])),
+            ],
+          );
+        },
       ),
     );
   }
