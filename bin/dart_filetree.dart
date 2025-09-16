@@ -50,6 +50,7 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
   final ScrollController fileTreeScrollController = ScrollController();
   final TextEditingController textEditingController = TextEditingController();
   final FileService fileService = const FileService();
+  String debugText = "";
 
   Directory directory = Directory.current;
   bool isWritingFileName = false;
@@ -151,22 +152,21 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
               'Are you sure you want to delete this file? (Y/y/enter or N/n)';
         });
         return true;
-      case LogicalKey.keyQ:
-        exit(0);
       case LogicalKey.keyW:
         previewScrollController.pageDown();
         return true;
       case LogicalKey.keyB:
         previewScrollController.pageUp();
         return true;
+      case LogicalKey.keyQ:
+        Terminal().clear();
+        exit(0);
     }
     return true;
   }
 
   Component _buildStatusBar(List<FileNode> currFiles) {
-    return Text(
-      '> ${pointerIndex + 1} / ${currFiles.length}',
-    );
+    return Text('${currFiles[pointerIndex].entity.path} || $debugText');
   }
 
   Component _buildMainContent() {
@@ -360,6 +360,7 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
       margin: EdgeInsets.symmetric(horizontal: 2),
       child: ListView.builder(
         controller: previewScrollController,
+        itemExtent: 1,
         itemCount: lines.length,
         itemBuilder: (context, index) {
           return Row(
