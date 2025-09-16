@@ -78,6 +78,16 @@ fvm dart test
 - `hive` - Local database for settings storage
 - `path` - File path manipulation utilities
 
+## Zellij Helix Integration Command
+
+Revise as you wish
+
+```
+:sh zellij run -c -f -x 10%% -y 10%% --width 80%% --height 80%% -- bash ~/dart_filetree/dart_filetree_picker.sh open %{buffer_name} 
+```
+
+Make sure to place the project in your home directory and that you have compiled the executable 
+
 ## License
 
 See LICENSE file for details.
