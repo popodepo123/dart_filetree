@@ -1,9 +1,8 @@
+import 'package:dart_filetree/file_node.dart';
+import 'package:dart_filetree/file_service.dart';
 import 'package:nocterm/nocterm.dart';
 import 'dart:io';
 import 'package:hive/hive.dart';
-
-import 'package:nocterm_filetree/file_node.dart';
-import 'package:nocterm_filetree/file_service.dart';
 
 // Constants
 const String _pathsExpandedKey = 'pathsExpanded';

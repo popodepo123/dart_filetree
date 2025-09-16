@@ -1,5 +1,6 @@
 import 'dart:io';
-import 'package:nocterm_filetree/file_node.dart';
+
+import 'package:dart_filetree/file_node.dart';
 
 /// Service class for handling file operations
 class FileService {
