@@ -10,7 +10,6 @@ const String _filetreeSelectedPathKey = 'filetreeSelectedPath';
 const String _chooserFilePrefix = '--chooser-file=';
 const int _headerHeight = 4;
 const int _fileTreeWidth = 30;
-const int _previewMargin = 35;
 const Duration _initialScrollDelay = Duration(milliseconds: 200);
 const bool _moveDown = false;
 const bool _moveUp = true;
@@ -50,7 +49,6 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
   final ScrollController fileTreeScrollController = ScrollController();
   final TextEditingController textEditingController = TextEditingController();
   final FileService fileService = const FileService();
-  String debugText = "";
 
   Directory directory = Directory.current;
   bool isWritingFileName = false;
@@ -166,7 +164,11 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
   }
 
   Component _buildStatusBar(List<FileNode> currFiles) {
-    return Text('${currFiles[pointerIndex].entity.path} || $debugText');
+    return Container(
+      height: 1,
+      alignment: Alignment.centerLeft,
+      child: Text(currFiles[pointerIndex].entity.path),
+    );
   }
 
   Component _buildMainContent() {
@@ -355,9 +357,9 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
     final content = fileService.readFileContent(node.entity.path);
     final lines = content.split('\n');
     return Container(
-      width: getMaxWidth() - _previewMargin.toDouble(),
+      width: getMaxWidth() - (_fileTreeWidth.toDouble() + 1),
       decoration: BoxDecoration(border: BoxBorder.all(color: Colors.white)),
-      margin: EdgeInsets.symmetric(horizontal: 2),
+      margin: EdgeInsets.only(left: 1),
       child: ListView.builder(
         controller: previewScrollController,
         itemExtent: 1,
