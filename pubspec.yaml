@@ -1,6 +1,7 @@
 name: dart_filetree
 description: A sample command-line application.
 version: 1.0.0
+license: MIT
 # repository: https://github.com/my_org/my_repo
 
 environment:
