@@ -1,5 +1,3 @@
-import 'dart:isolate';
-
 import 'package:dart_filetree/file_node.dart';
 import 'package:dart_filetree/file_service.dart';
 import 'package:nocterm/nocterm.dart';
