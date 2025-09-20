@@ -48,10 +48,12 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
   final ScrollController previewScrollController = ScrollController();
   final ScrollController fileTreeScrollController = ScrollController();
   final TextEditingController textEditingController = TextEditingController();
+  final TextEditingController searchEditingController = TextEditingController();
   final FileService fileService = const FileService();
 
   Directory directory = Directory.current;
   bool isWritingFileName = false;
+  bool isWritingSearchQuery = false;
   bool isDeletingFile = false;
   double viewportUp = 0;
   double viewportDown = 0;
@@ -92,7 +94,9 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
             children: [
               _buildStatusBar(currFiles),
               _buildMainContent(),
-              if (isWritingFileName || isDeletingFile) _buildInputField(),
+              if (isWritingFileName || isDeletingFile)
+                _buildNewFileNameInputField(),
+              if (isWritingSearchQuery) _buildSearchInputField(),
             ],
           ),
         ),
@@ -133,9 +137,16 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
       case LogicalKey.keyK:
         return movePointerIndex(_moveUp);
       case LogicalKey.keyA:
-        textEditingController.text = '';
-        isWritingFileName = true;
-        setState(() {});
+        setState(() {
+          textEditingController.text = '';
+          isWritingFileName = true;
+        });
+        return true;
+      case LogicalKey.keyS:
+        setState(() {
+          searchEditingController.text = '';
+          isWritingSearchQuery = true;
+        });
         return true;
       case LogicalKey.keyL:
         expandPath(currFiles[pointerIndex].entity.path);
@@ -167,7 +178,9 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
     return Container(
       height: 1,
       alignment: Alignment.centerLeft,
-      child: Text(currFiles[pointerIndex].entity.path),
+      child: !isWritingSearchQuery
+          ? Text(currFiles[pointerIndex].entity.path)
+          : Text("result files: ${currFiles.length} "),
     );
   }
 
@@ -182,7 +195,7 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
     );
   }
 
-  Component _buildInputField() {
+  Component _buildNewFileNameInputField() {
     return TextField(
       onFocusChange: (value) {
         if (value) {
@@ -193,6 +206,23 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
       decoration: InputDecoration(border: BoxBorder.all(color: Colors.white)),
       controller: textEditingController,
       onSubmitted: handleCreate,
+    );
+  }
+
+  Component _buildSearchInputField() {
+    return TextField(
+      onFocusChange: (value) {
+        if (value) {
+          setState(() => isWritingSearchQuery = false);
+        }
+      },
+      focused: isWritingSearchQuery,
+      decoration: InputDecoration(border: BoxBorder.all(color: Colors.white)),
+      controller: searchEditingController,
+      onSubmitted: handleSearch,
+      onChanged: (value) {
+        setState(() {});
+      },
     );
   }
 
@@ -209,22 +239,51 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
   }
 
   void _updateFileTree() {
-    currentFiles = fileService.buildFileTree(directory, pathsExpanded);
+    currentFiles = fileService.buildFileTree(
+      directory: directory,
+      expandedPaths: pathsExpanded,
+    );
     setState(() {});
   }
 
   List<FileNode> getCurrFiles() {
     if (currentFiles.isEmpty) {
-      currentFiles = fileService.buildFileTree(directory, pathsExpanded);
+      currentFiles = fileService.buildFileTree(
+        directory: directory,
+        expandedPaths: pathsExpanded,
+      );
     }
-    return currentFiles;
+    if (searchEditingController.text.isEmpty) return currentFiles;
+    final searchresults = currentFiles.where((node) {
+      final query = searchEditingController.text.toLowerCase();
+      return node.keywords.contains(query) && !node.isDirectory;
+    }).toList();
+    final withParents = <FileNode>{
+      ...searchresults
+          .map((node) => node.parent)
+          .where((node) => node.level >= 0),
+      ...searchresults,
+    };
+    List<FileNode> withParentsUnique = [];
+    for (var withParent in withParents) {
+      if (withParentsUnique.any(
+        (node) => node.entity.path == withParent.entity.path,
+      )) {
+        continue;
+      }
+      withParentsUnique.add(withParent);
+    }
+    withParentsUnique.sort((a, b) => a.entity.path.compareTo(b.entity.path));
+    return withParentsUnique;
   }
 
   void init() {
     final storedExpandedPaths =
         component.box.get(_pathsExpandedKey) as String? ?? '';
-    pathsExpanded =
-        storedExpandedPaths.split(',').where((e) => e.isNotEmpty).toSet();
+    pathsExpanded = storedExpandedPaths
+        .split(',')
+        .where((e) => e.isNotEmpty)
+        .toSet();
 
     final storedSelectedPath =
         component.box.get(_filetreeSelectedPathKey) as String? ?? '';
@@ -344,8 +403,17 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
     fileService
         .writeToChooserFile(chooserFile: component.chooserFile, toWrite: path)
         .then((value) {
-      if (value == null) exit(69);
-      exit(0);
+          if (value == null) exit(69);
+          exit(0);
+        });
+  }
+
+  /// Basic implem
+  //TODO: convert logic to fzf/grep/ripgrep
+  void handleSearch(String value) {
+    setState(() {
+      pointerIndex = 0;
+      isWritingSearchQuery = false;
     });
   }
 
@@ -367,8 +435,10 @@ class _FiletreeComponentState extends State<FiletreeComponent> {
         itemBuilder: (context, index) {
           return Row(
             children: [
-              Text('${(index + 1).toString().padLeft(4)}: ',
-                  style: TextStyle(color: Colors.gray)),
+              Text(
+                '${(index + 1).toString().padLeft(4)}: ',
+                style: TextStyle(color: Colors.gray),
+              ),
               Expanded(child: Text(lines[index])),
             ],
           );

@@ -8,6 +8,9 @@ class FileNode {
   final FileSystemEntity entity;
   final int level;
 
+  ///Keywords for now
+  String get keywords => name.split(".").first.toLowerCase();
+
   /// Whether this node represents a directory
   bool get isDirectory => entity is Directory;
 
@@ -21,6 +24,11 @@ class FileNode {
     final prefix = _getPrefix();
     final suffix = isDirectory ? '/' : '';
     return '$prefix$baseName$suffix';
+  }
+
+  /// The parent of this node
+  FileNode get parent {
+    return FileNode(entity.parent, level: level - 1);
   }
 
   /// The children of this node (empty for files)

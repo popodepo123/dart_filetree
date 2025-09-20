@@ -61,7 +61,10 @@ class FileService {
   }
 
   /// Builds the complete file tree from directory
-  List<FileNode> buildFileTree(Directory directory, Set<String> expandedPaths) {
+  List<FileNode> buildFileTree({
+    required Directory directory,
+    required Set<String> expandedPaths,
+  }) {
     final entities = listDirectory(directory);
     final nodes = entities
         .map((entity) => FileNode(entity, expandedPaths: expandedPaths))
